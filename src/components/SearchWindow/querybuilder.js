@@ -1,8 +1,12 @@
 import {QueryBuilder} from 'react-querybuilder';
 import React, {Component} from 'react';
+import ReactDOM from 'react-dom';
 import { Button, Glyphicon, Well, Modal, Tabs, Tab, Grid, Row, Col, Alert, FormGroup, Checkbox, ControlLabel, FormControl, HelpBlock} from 'react-bootstrap';
 import CreateDataViewDialog from '../Dialogs/createDataView';
 import CreateAlertViewDialog from '../Dialogs/createAlertView';
+
+import Shepherd from'tether-shepherd';
+
 const {Footer, Body, Header, Title} = Modal;
 /* eslint-disable react/prop-types*/
 
@@ -126,9 +130,9 @@ const startQuery = {
     rules: [
         {
             id: '222',
-            field: 'firstName',
-            value: 'Test',
-            operator: '='
+            field: 'location',
+            value: 'within',
+            operator: 'global'
         }
     ]
 };
@@ -140,37 +144,96 @@ export default class QueryBuilderWindow extends Component {
 
     constructor(prop) {
         super(prop);
-        this.state = { showModalView: false, showModalAlert: false };
+       
         this.close = this.close.bind(this);
         this.open = this.open.bind(this);
-         this.openAlert = this.openAlert.bind(this);
+        this.openAlert = this.openAlert.bind(this);
+        //Create the example tour
+         const tour =new  Shepherd.Tour({
+            defaults : {
+                classes :'shepherd-theme-dark',
+                scrollTo : true
+            }
+        });
+
+        const me = this;
+        tour.on('complete', ()=>{
+            if ( tour.steps.length > 6)
+                me.setState({tour :null});
+        })
+         this.state = { showModalView: false, showModalAlert: false, tour : tour };
+     
     }
 
+    componentDidMount() {
+        const tour = this.state.tour;
+        if (tour != null && Shepherd.activeTour == null) {
+            tour.addStep('example', {
+                text: 'Welcome to the mock interface for a generic analysis application. We\'ll start the tour with the search pane',
+                attachTo: {element: this.refs.mainWindow, on: 'right'}
+            })
+            tour.addStep('helpBtn', {
+                text: '(don\'t forget, there will be user guidance here)',
+                attachTo: {element: ReactDOM.findDOMNode(this.refs.helpBtn), on: 'bottom'}
+            })
+            tour.addStep('querywindow', {
+                text: 'Create your query using logical operations. Have a go at requesting data within the M25',
+                attachTo: {element: this.refs.queryData, on: 'right'}
+            })
+            tour.addStep('alertbutton', {
+                text: 'Clicking here would create an Alert Window that will show all new data matching the above criteria, but let\'s not do that just yet',
+                attachTo: {element: ReactDOM.findDOMNode(this.refs.alertButton), on: 'bottom'}
+            })
+            tour.addStep('querywindow', {
+                text: 'But, first have a go at adding an new rule, and specifying that you wish to see data from the last hour (clue: it\'s the time field)',
+                attachTo: {element: this.refs.queryData, on: 'right'}
+            })
+            tour.addStep('viewButton', {
+                text: 'Now you can create a map that shows all data in the M25, for the last hour',
+                attachTo: {element: ReactDOM.findDOMNode(this.refs.dataButton), on: 'top'}
+            })
+            tour.addStep('clickViewButton', {
+                text: 'Click the Create Data View Button to get started.',
+                attachTo: {element: ReactDOM.findDOMNode(this.refs.dataButton), on: 'top'},
+                buttons: []
+            })
+            this.state.tour.start();
+        }
+
+    }
     close() {
         this.setState({ showModalView: false });
         this.setState({ showModalAlert: false })
     }
 
     open() {
+        
         this.setState({ showModalView: true });
     }
     openAlert() {
+      
         this.setState({ showModalAlert: true });
     }
     render() {
         const {showModalView, showModalAlert} = this.state;
         return (
-            <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <div  ref="mainWindow" style={{ width: '100%', height: '100%', position: 'relative' }}>
                 <div className="container-fluid" >
+                 <div className="row" >
+                 <div style= {{float:'right'}}>
+                    <Button bsStyle='default'  ><Glyphicon glyph="cog" /> </Button>
+                       <Button ref="helpBtn" bsStyle='info'  ><Glyphicon glyph="question-sign" /> </Button>
+                       </div>
+                 </div>
                     <div className="row" >
                         <div className="col-md-2" style={{ minWidth: '110px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <img src="https://github.com/DeepBlueCLtd/lesco/raw/master/logo.png" style={{ height: '100px', marginTop: '30px', marginLeft: '10px' }}/>
+                                <a href="index.html"><img src="https://github.com/DeepBlueCLtd/lesco/raw/master/logo.png" style={{ height: '100px', marginTop: '30px', marginLeft: '10px' }}/></a>
                             </div>
                         </div>
-                        <div className="col-xs-10" >
-                            <Well  >
-                                <strong>Create your search query</strong>
+                        <div ref="queryData"  className="col-xs-10" >
+                            <Well   >
+                                <strong  >Create your search query</strong>
                                 <QueryBuilder query={startQuery} fields={fields}
                                     onQueryChange={logQuery} getEditor={getEditor} getOperators={getOperators} controlClassnames= {CSSClass}/>
                             </Well>
@@ -178,18 +241,18 @@ export default class QueryBuilderWindow extends Component {
                     </div>
                 </div>
                 <div style={{ position: 'absolute', bottom: 0, right: 0 }}>
-                    <Button bsStyle='danger' onClick={this.openAlert}  ><Glyphicon glyph="alert" />  Create Alert </Button>
-                    <Button bsStyle='primary' onClick={this.open} ><Glyphicon glyph="eye-open" /> Show in Data View  </Button>
+                    <Button ref='alertButton' bsStyle='danger' onClick={this.openAlert}  ><Glyphicon glyph="alert" />  Create Alert </Button>
+                    <Button ref='dataButton' bsStyle='primary' onClick={this.open} ><Glyphicon glyph="eye-open" /> Show in Data View  </Button>
                     <div style={{ clear: 'both' }}></div>
                 </div>
 
-
-                <Modal show={showModalView} onHide={this.close}>
+            <div ref='dataViewDialog' >
+                <Modal   show={showModalView} onHide={this.close}>
                     <Header closeButton>
                         <Title>Create Data View</Title>
                     </Header>
                     <Body>
-                        <CreateDataViewDialog/>
+                        <CreateDataViewDialog  tour={this.state.tour}/>
                     </Body>
                     <Footer>
                         <Button  bsStyle="success"onClick={this.close}>Confirm</Button>
@@ -201,16 +264,17 @@ export default class QueryBuilderWindow extends Component {
                         <Title>Create Alert</Title>
                     </Header>
                     <Body>
-                        <CreateAlertViewDialog/>
+                        <CreateAlertViewDialog tour={this.state.tour}/>
                     </Body>
                     <Footer>
                         <Button  bsStyle="success"onClick={this.close}>Confirm</Button>
                         <Button onClick={this.close}>Close</Button>
                     </Footer>
                 </Modal>
+                </div>
+                </div>
 
-
-            </div >)
+         )
     }
 }
 
