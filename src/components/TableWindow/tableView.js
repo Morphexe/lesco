@@ -1,5 +1,5 @@
 import React, {Component} from 'react'
-import SlickGrid from 'react-slickgrid';
+import SlickGrid from '../SlickGrid/SlickGrid';
 
 function randId() {
     return Math.random().toString(36).substr(2, 10);
@@ -8,7 +8,6 @@ export default class TableView extends Component {
     constructor(pr) {
         super(pr);
         this.state = { gridID: randId(), data: pr.data }
-
     }
     componentDidMount() {
         const me = this;
@@ -28,10 +27,10 @@ export default class TableView extends Component {
             }, 5);
         });
 
-       
+
     }
 
-    resizeGrid(grid) {
+ resizeGrid(grid) {
         grid.resizeCanvas();
         grid.autosizeColumns();
         grid.invalidate();

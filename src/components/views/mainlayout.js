@@ -76,6 +76,7 @@ const layoutConfig = {
                 },
                 {
                     type: 'row',
+                    
                     height: 60,
                     content: [{
                         type: 'react-component',

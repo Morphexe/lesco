@@ -162,7 +162,7 @@ export default class QueryBuilderWindow extends Component {
             if (tour.steps.length > 6)
                 me.setState({ tour: null });
         })
-        this.state = { showModalView: false, showModalAlert: false, tour: tour };
+        this.state = { showModalView: false, showModalAlert: false, tour, viewType: 'map' };
 
     }
 
@@ -225,12 +225,38 @@ export default class QueryBuilderWindow extends Component {
 
     createAlertWindow() {
         const layoutManager = this.props.glContainer.layoutManager;
+
         const newItemConfig = {
             type: 'react-component',
-            component: 'TableAlert',
+            component: 'MapAlert',
             title: this.state.viewTitle
         };
-        layoutManager.root.contentItems[0].addChild(newItemConfig)
+
+        switch (this.state.viewType) {
+            case 'map':
+                newItemConfig.component = 'MapAlert'
+                break;
+            case 'cloud':
+                 newItemConfig.component = 'CloudAlert'
+                break;
+            case 'table':
+                 newItemConfig.component = 'TableAlert'
+                newItemConfig.props = { title: this.state.viewTitle, color: '#eb4f4f' };
+                newItemConfig.cssClass = ''
+                break;
+            case 'histogram':
+                 newItemConfig.component = 'HistogramAlert'
+                break;
+            case 'cards':
+                 newItemConfig.component = 'CardAlert'
+                break;
+        }
+
+
+        const container = layoutManager.root.contentItems[0].getItemsByFilter((ele) => {
+            return ele.config.component == 'AlertContainer';
+        })
+        container[0].instance._reactComponent.addPanel(newItemConfig);
         this.close();
 
     }
@@ -240,12 +266,10 @@ export default class QueryBuilderWindow extends Component {
             type: 'react-component',
             component: 'Histogram',
             title: this.state.viewTitle
-
         };
         layoutManager.root.contentItems[0].addChild(newItemConfig);
         this.close();
     }
-
     render() {
         const {showModalView, showModalAlert} = this.state;
         return (
@@ -280,7 +304,6 @@ export default class QueryBuilderWindow extends Component {
                     <Button ref='dataButton' bsStyle='primary' onClick={this.open} ><Glyphicon glyph="eye-open" /> Show in Data View  </Button>
                     <div style={{ clear: 'both' }}></div>
                 </div>
-
                 <div ref='dataViewDialog' >
                     <Modal   show={showModalView} onHide={this.close}>
                         <Header closeButton>
@@ -299,7 +322,7 @@ export default class QueryBuilderWindow extends Component {
                             <Title>Create Alert</Title>
                         </Header>
                         <Body>
-                            <CreateAlertViewDialog tour={this.state.tour} onChange={(data) => { this.setState({ viewTitle: data.target.value }) } }/>
+                            <CreateAlertViewDialog type={this.state.viewType} tour={this.state.tour} onTypeChange={(t) => { this.setState({ viewType: t }) } } onChange={(data) => { this.setState({ viewTitle: data.target.value }) } }/>
                         </Body>
                         <Footer>
                             <Button  bsStyle="success"onClick={this.createAlertWindow}>Confirm</Button>

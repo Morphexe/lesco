@@ -1,5 +1,6 @@
 import React, {Component} from 'react'
-import SlickGrid from 'react-slickgrid';
+import SlickGrid from '../SlickGrid/SlickGrid';
+
 
 const tableData = [
     { Time: '12/09/17 16:34:33', User: 'userA', Location: '12.3N 1.3W', Source: 'Twitter', Message: 'message a', Keywords: 'keyword-a' },
@@ -29,7 +30,6 @@ function format(date) {
 
     var res = "12/09/17 " + hrPad + hrs + ":" + minPad + mins + ":" + secPad + secs;
 
-    console.log(res);
     return res;
 }
 
@@ -44,34 +44,39 @@ function simulateRealTimeUpdates(grid) {
         changes[server] = {};
     }
     changes[0] = { Time: 'changedGreen', User: 'changedGreen', Location: 'changedGreen', Source: 'changedGreen', Message: 'changedGreen', Keywords: 'changedGreen' }
-//    changes[server]['User'] = 'changed';
+    //    changes[server]['User'] = 'changed';
 
     grid.setCellCssStyles('highlight', changes);
-//    grid.flashCell(server, 1, 5000);
+    //    grid.flashCell(server, 1, 5000);
     setTimeout(function () {
         const oh = { server: { Time: '', User: '', Location: '', Source: '', Message: '', Keywords: '' } };
         grid.setCellCssStyles('highlight', oh);
     }, 2000);
     grid.invalidateRow(server);
+    grid.resizeCanvas();
     grid.invalidate();
-    var nextInterval = 2000 + Math.random() * 5000;
+
+    const nextInterval = 2000 + Math.random() * 5000;
     setTimeout(function () {
         simulateRealTimeUpdates(grid);
     }, nextInterval);
 
 }
-
+function randId() {
+    return Math.random().toString(36).substr(2, 10);
+}
 export default class TableAlert extends Component {
 
-
+    constructor(props) {
+        super(props);
+        this.state = { gridID: randId() }
+    }
     resizeGrid(grid) {
         grid.resizeCanvas();
-        //grid.autosizeColumns();
+        grid.autosizeColumns();
         grid.invalidate();
         grid.render();
     }
-
-
     componentDidMount() {
         const color = this.props.color || '#000000';
         this.props.glContainer.tab.titleElement.prevObject.css('background-color', this.props.color);
@@ -80,25 +85,45 @@ export default class TableAlert extends Component {
         this.props.glContainer.on('tab', (tab) => {
             tab.titleElement.prevObject.css('background-color', color);
         });
-        const me = this.refs.grid;
+
+        const grid = this.refs.grid._slickgrid;
+        const me = this;
+        this.props.glContainer.on('resize',
+            () => {
+                setTimeout(() => { me.resizeGrid(grid) }, 1);
+            }
+        )
+        this.props.glContainer.on('open',
+            () => {
+                // me.setState({})
+                setTimeout(() => { me.resizeGrid(grid) }, 1);
+            }
+        )
+        this.props.glContainer.on('show', function () {
+            () => {
+                //me.setState({})
+                setTimeout(() => { me.resizeGrid(grid) }, 1);
+            }
+        });
         setTimeout(function () {
-            simulateRealTimeUpdates(me._slickgrid);
+            simulateRealTimeUpdates(grid);
         }, 2000);
 
     }
     render() {
         var settings = {
             multiColumnSort: true,
-              defaultColumnWidth: 125,
-            rowHeight: 26
+            defaultColumnWidth: 125,
+            rowHeight: 26,
+            autoHeight: true
         };
         return (
-            <div  style={{ position: 'relative', height: '100%', width: '100%' }}>
+            <div style={{ overflow: 'scroll', position: 'relative', height: '100%', width: '100%' }}>
 
-                <SlickGrid ref='grid'  id="slick-grid-container2"
+                <SlickGrid  ref='grid'   id={this.state.gridID}
                     data = {tableData}
-                    table="NFL2"
                     settings={settings}  />
+
             </div>
 
 

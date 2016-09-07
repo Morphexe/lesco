@@ -31,7 +31,7 @@ const layoutConfig = {
                     component: 'TableAlert',
                     title: 'New #evening',
                     props: { title: 'New #evening', color: '#eb4f4f' },
-                    cssClass : ''
+                    cssClass: ''
                 },
                 {
                     type: 'row',
@@ -42,18 +42,18 @@ const layoutConfig = {
                             component: 'CardAlert',
                             title: 'Local imagery',
                             props: { title: 'Local imagery', color: '#4febeb' },
-                            cssClass : 'scroll'
+                            cssClass: 'scroll'
                         },
                         {
                             type: 'react-component',
                             component: 'HistogramAlert',
                             title: 'Platforms today',
                             props: { title: 'Platforms today', color: '#eb9650' },
-                            cssClass : 'scroll'
+                            cssClass: 'scroll'
                         }
                     ]
                 }
-                ]
+            ]
         }
 
     ]
@@ -63,12 +63,15 @@ const layoutConfig = {
 export default class AlertWallContainer extends Component {
     constructor(props) {
         super(props);
-
-        //this.state = { layout };
+        this.layout = null;
+    }
+    addPanel(config) {
+        const layoutManager = this.layout;
+        layoutManager.root.contentItems[0].addChild(config);
     }
     componentDidMount() {
         const layout = new GoldenLayout(layoutConfig, this.refs.LayoutContainer);
-
+        this.layout = layout; 
         let alertCtr = 1;
 
         const alertWall = React.createClass({
